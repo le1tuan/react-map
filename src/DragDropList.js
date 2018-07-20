@@ -50,24 +50,20 @@ export default class DragDropList extends Component {
     };
     this.onDragEnd = this.onDragEnd.bind(this);
   }
+  componentWillReceiveProps(nextProps) {
 
+  }
   onDragEnd(result) {
-    // dropped outside the list
     if (!result.destination) {
       return;
     }
-
     const items = reorder(
-      this.state.items,
+      this.props.items,
       result.source.index,
       result.destination.index,
     );
-    console.log(items)
-    this.setState({
-      items,
-    });
-    const newState = items.map((item) => item.state)
-    this.props.handleChangeRoute(newState)
+
+    this.props.handleChangeRoute(items)
   }
 
   // Normally you would want to split things out into separate components.
@@ -81,7 +77,7 @@ export default class DragDropList extends Component {
               ref={droppableProvided.innerRef}
               style={getListStyle(droppableSnapshot.isDraggingOver)}
             >
-              {this.state.items.map((item, index) => (
+              {this.props.items && (this.props.items.map((item, index) => (
                 <Draggable key={item.id} draggableId={item.id} index={index}>
                   {(draggableProvided, draggableSnapshot) => (
                     <div
@@ -97,7 +93,7 @@ export default class DragDropList extends Component {
                     </div>
                   )}
                 </Draggable>
-              ))}
+              )))}
               {droppableProvided.placeholder}
             </div>
           )}
