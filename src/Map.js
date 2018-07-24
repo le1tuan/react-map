@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import isEqual from 'lodash.isequal';
 
 export default class Map extends React.Component { 
@@ -12,7 +12,6 @@ export default class Map extends React.Component {
     this.latestInfoWindow = null
   }
   shouldComponentUpdate(nextProps) {
-    console.log(isEqual(this.props.routes, nextProps.routes), this.props.routes, nextProps.routes)
     if (isEqual(this.props.routes, nextProps.routes)) {
       return false;
     }
@@ -44,10 +43,11 @@ export default class Map extends React.Component {
         return value;
       }, []);
       paths.push(specificPath)
+      return route;
     })
-    const reSequenceWindow = this.renderInfoWindow('Re-Render');
-    const moveWindow = this.renderInfoWindow('Move')  
-    this.flightPath = paths.map((path) => {
+    const reSequenceWindow = this.renderInfoWindow('Re-Render', 'rerender');
+    const moveWindow = this.renderInfoWindow('Move' ,'move')  
+    paths.map((path) => {
       const linearPath = this.renderPolyline(path.path)
       this.addEvent(linearPath, 'click', (e) => {
         reSequenceWindow.setPosition({
@@ -55,7 +55,7 @@ export default class Map extends React.Component {
           lng: e.latLng.lng(),
         })
         this.openInfoWindow(reSequenceWindow, map)
-        document.getElementById('show-popup').addEventListener('click', () => {
+        document.getElementById('rerender').addEventListener('click', () => {
           if (this.props.routes) {
             this.props.openInfoWindow({
               openModal: true,
@@ -65,6 +65,7 @@ export default class Map extends React.Component {
         })
       })
       linearPath.setMap(map)
+      return path
     })
     paths.map((path) => {
       this.marker = path.path.map(item => {
@@ -72,11 +73,25 @@ export default class Map extends React.Component {
           position: item,
           map: map,
         });
-        marker.addListener('click', () => {
+        marker.addListener('click', (e) => {
+          moveWindow.setPosition({
+            lat: e.latLng.lat(),
+            lng: e.latLng.lng(),
+          })
           this.openInfoWindow(moveWindow, map, marker)
+          document.getElementById('move').addEventListener('click', () => {
+            if (this.props.routes) {
+              this.props.openInfoWindow({
+                openSelectRoute: true,
+                selectedRoute: this.props.routes.filter((route) => route.title === path.title),
+              })
+            }
+          }) 
+
         })
         return marker
       })
+      return path
     })
   }
 
@@ -91,8 +106,8 @@ export default class Map extends React.Component {
       strokeWeight: 5
     });
   }
-  renderInfoWindow(title) {
-    const InfoContent = `<div><div id="show-popup">${title}</div></div>`
+  renderInfoWindow(title, id) {
+    const InfoContent = `<div><div id=${id}>${title}</div></div>`
     return new window.google.maps.InfoWindow({
       content: InfoContent
     });
@@ -118,7 +133,7 @@ export default class Map extends React.Component {
 
   render() {
     return (
-      <div id="map" style={{ width: '100%', height: '500px' }}></div>
+      <div id="map" style={{ width: '75%', height: '500px' }}></div>
     )
   }
 }

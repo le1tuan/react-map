@@ -40,6 +40,7 @@ const reorderSingleDrag = ({
 
   // moving to a new list
   const home = entities.columns[source.droppableId];
+  console.log(home, 'homeeee')
   const foreign = entities.columns[destination.droppableId];
 
   // the id of the task to be moved
@@ -191,6 +192,7 @@ const reorderMultiDrag = ({
 };
 
 export const mutliDragAwareReorder = (args) => {
+  console.log(args, 'args')
   if (args.selectedTaskIds.length > 1) {
     return reorderMultiDrag(args);
   }

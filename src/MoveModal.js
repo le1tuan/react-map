@@ -1,59 +1,42 @@
 import React from 'react'
 import Dialog from 'material-ui/Dialog';
-import DragDropList from './DragDropList';
 import FlatButton from 'material-ui/FlatButton';
 
-class ModalMap extends React.Component {
+class SelectRouteModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      routes: this.props.items || []
+      entities: this.props.items || {},
+      selectedTaskIds: [],
+      draggingTaskId: null,
     }
   }
   componentDidMount() {
     if (this.props.items) {
       this.setState(() => ({  
-        routes: this.props.items
+        entities: this.props.items
       }))
     }
   }
   componentWillReceiveProps(nextProps) {
     if (nextProps.items) {
       this.setState(() => ({  
-        routes: nextProps.items
+        entities: nextProps.items
       }))
     }
   }
-  handleSubmitModal = () => {
-    const newState = {
-      title: this.state.routes[0].content,
-      path: [],
-    }
-    this.state.routes.map((item) => {
-      newState.path.push(item.state)
-      return item;
-    })
-    this.props.handleChangeRoute(newState)
-    this.props.handleClose()
-  }
-  handleChangeRoute = (newRoute) => {
-    this.setState({
-      routes: newRoute
-    })
-  }
   render() {
-    console.log(this.state.routes)
     const actions = [
       <FlatButton
-        label="Cancel"
+        label="OK"
         primary={true}
         onClick={this.props.handleClose}
       />,
       <FlatButton
-        label="Submit"
+        label="Cancel"
         primary={true}
-        onClick={this.handleSubmitModal}
-      />,
+        onClick={this.props.handleClose}
+      />
     ];
     return(
       <Dialog
@@ -67,14 +50,26 @@ class ModalMap extends React.Component {
         }}
         actions={actions}
       >
-        <DragDropList
-          handleChangeRoute={this.handleChangeRoute}
-          items={this.state.routes}
-        />
+        <div>
+          {
+            this.props.items.map((item, index) => 
+              <div
+                key={index}
+                onClick={() => {this.props.openInfoWindow({
+                  selectedMoveRoute: [item],
+                  openSelectRoute: false,
+                  openMoveRoute: true,
+                })}}
+              >
+                {item.title}
+              </div>
+            )
+          }
+        </div>
       </Dialog>
     )
   }
 }
 
 
-export default ModalMap;
+export default SelectRouteModal;

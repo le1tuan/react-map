@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import ModalMap from './Modal';
-import DrapDropList from './DragDropList';
+import SelectRouteModal from './MoveModal';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider'
-import ActionHome from 'material-ui/svg-icons/action/home';
 import Map from './Map'
+import DragDropModal from './DragDropModal'
 
 class App extends Component {
   constructor(props) {
@@ -40,6 +39,10 @@ class App extends Component {
         }],
       openModal: false,
       selectedPoint: null,
+      selectedRoute: null,
+      selectedMoveRoute: null,
+      openSelectRoute: false,
+      openMoveRoute: false,
     }
     // this.canvas = null
     // this.createLatLng = this.createLatLng.bind(this)
@@ -47,6 +50,7 @@ class App extends Component {
     // this.renderPolyline = this.renderPolyline.bind(this)
     // this.renderInfoWindow = this.renderInfoWindow.bind(this)
     this.handleClose = this.handleClose.bind(this)
+    this.handleCloseSelectRoute = this.handleCloseSelectRoute.bind(this)
     this.latestInfoWindow = null
   }
   handleChangeRoute = (newRoute) => {
@@ -54,9 +58,34 @@ class App extends Component {
     filterState.splice(0, 0, newRoute)
     this.setState({
       routes: filterState
-    }, () => {
-      console.log(this.state, 123123)
     })
+  }
+
+  handleMultipleChangeRoute = (newRoute) => {
+    const filterState = this.state.routes.filter((route) => {
+      const check = newRoute[route.title]
+      return check ? true : false
+    })
+    const result = [];
+    newRoute.columnOrder.map((id) => {
+      const routes = []
+      newRoute.columns[id].taskIds.map((route) => {
+        routes.push(newRoute.tasks[route].path)
+        return route
+      })
+      result.push({
+        title: id,
+        path: routes
+      })
+      return id
+    })
+    this.setState(() => ({
+      routes: [
+        ...filterState,
+        ...result
+      ],
+      openMoveRoute: false,
+    }))
   }
   // createLatLng(num) {
   //   if (num.lat && num.long && window.google) {
@@ -161,6 +190,11 @@ class App extends Component {
       openModal: false,
     })
   }
+  handleCloseSelectRoute() {
+    this.setState({
+      openSelectRoute: false,
+    })
+  }
   handleChangeLatestInfoWindow = (newValue) => {
     this.latestInfoWindow = newValue;
   }
@@ -168,19 +202,29 @@ class App extends Component {
     this.setState(newState)
   }
   render() {
-    const { routes, selectedPoint } = this.state
-    console.log(selectedPoint)
+
+    const { selectedPoint, selectedRoute, selectedMoveRoute } = this.state
     return (
       <MuiThemeProvider >
-        <div className="App">
-          <div id="map" style={{ width: '100%', height: '500px' }}></div>
+        <div className="App"
+          style={{
+            display: 'flex'
+          }}
+        >
           <Map
             routes={this.state.routes}
             selectedPoint={this.state.selectedPoint}
+            selectedRoute={this.state.selectedRoute}
             latestInfoWindow={this.latestInfoWindow}
             handleChangeLatestInfoWindow={this.handleChangeLatestInfoWindow}
             openInfoWindow={this.openInfoWindow}
           />
+          <div style={{
+            width: '25%',
+            height: '500px',
+          }}>
+
+          </div>
           <ModalMap
             openModal={this.state.openModal}
             handleClose={this.handleClose}
@@ -193,6 +237,60 @@ class App extends Component {
               return value;
             }, []) : []}
             handleChangeRoute={this.handleChangeRoute}
+            debugName="Re-Sequence"
+          />
+          <SelectRouteModal
+            openModal={this.state.openSelectRoute}
+            handleClose={this.handleCloseSelectRoute}
+            items={(selectedRoute && selectedRoute[0]) ? this.state.routes.filter((route) => {
+              return selectedRoute[0].title !== route.title
+            }) : []}
+            handleChangeRoute={this.handleChangeRoute}
+            debugName="Select Route to Move"
+            openInfoWindow={this.openInfoWindow}
+          />
+          <DragDropModal
+            openModal={this.state.openMoveRoute}
+            handleClose={() => {
+              this.setState({
+                openMoveRoute: false,
+              });
+            }}
+            items={(selectedRoute && selectedRoute[0] && selectedMoveRoute && selectedMoveRoute[0]) && {
+              columnOrder: [selectedRoute[0].title, selectedMoveRoute[0].title],
+              columns: {
+                [selectedRoute[0].title]: {
+                  id: selectedRoute[0].title,
+                  taskIds: selectedRoute[0].path.map((route, index) => `${selectedRoute[0].title}-${index}`)
+                },
+                [selectedMoveRoute[0].title]: {
+                  id: selectedMoveRoute[0].title,
+                  taskIds: selectedMoveRoute[0].path.map((route, index) => `${selectedMoveRoute[0].title}-${index}`)
+                }
+              },
+              tasks: Object.assign({},
+                selectedRoute[0].path.reduce((value, next, index) => {
+                  const temp = {
+                    content: "Task 0",
+                    id: `${selectedRoute[0].title}-${index}`,
+                    path: next,
+                  }
+                  value[`${selectedRoute[0].title}-${index}`] = temp
+                  return value;
+                }, {}),
+                selectedMoveRoute[0].path.reduce((value, next, index) => {
+                  const temp = {
+                    content: "Task 0",
+                    id: `${selectedMoveRoute[0].title}-${index}`,
+                    path: next,
+                  }
+                  value[`${selectedMoveRoute[0].title}-${index}`] = temp
+                  return value;
+                }, {}))
+            }}
+            debugName="Move Route"
+            openInfoWindow={this.openInfoWindow}
+            handleMultipleChangeRoute={this.handleMultipleChangeRoute}
           />
         </div>
       </MuiThemeProvider>

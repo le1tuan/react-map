@@ -1,4 +1,5 @@
-const tasks =  Array.from({ length: 20 }, (v, k) => k).map(
+// @flow
+const tasks = Array.from({ length: 20 }, (v, k) => k).map(
   (val) => ({
     id: `task-${val}`,
     content: `Task ${val}`,

@@ -1,58 +1,45 @@
 import React from 'react'
 import Dialog from 'material-ui/Dialog';
-import DragDropList from './DragDropList';
 import FlatButton from 'material-ui/FlatButton';
+import DragDropMulti from './DragDropMulti'
 
-class ModalMap extends React.Component {
+class DragDropModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      routes: this.props.items || []
+      entities: this.props.items || {},
+      selectedTaskIds: [],
+      draggingTaskId: null,
     }
   }
   componentDidMount() {
     if (this.props.items) {
       this.setState(() => ({  
-        routes: this.props.items
+        entities: this.props.items
       }))
     }
   }
   componentWillReceiveProps(nextProps) {
     if (nextProps.items) {
       this.setState(() => ({  
-        routes: nextProps.items
+        entities: nextProps.items
       }))
     }
   }
-  handleSubmitModal = () => {
-    const newState = {
-      title: this.state.routes[0].content,
-      path: [],
-    }
-    this.state.routes.map((item) => {
-      newState.path.push(item.state)
-      return item;
-    })
-    this.props.handleChangeRoute(newState)
-    this.props.handleClose()
-  }
-  handleChangeRoute = (newRoute) => {
-    this.setState({
-      routes: newRoute
-    })
+  handleSetState = (newState) => {
+    this.setState(newState)
   }
   render() {
-    console.log(this.state.routes)
     const actions = [
+      <FlatButton
+        label="OK"
+        primary={true}
+        onClick={() => this.props.handleMultipleChangeRoute(this.state.entities)}
+      />,
       <FlatButton
         label="Cancel"
         primary={true}
         onClick={this.props.handleClose}
-      />,
-      <FlatButton
-        label="Submit"
-        primary={true}
-        onClick={this.handleSubmitModal}
       />,
     ];
     return(
@@ -67,14 +54,16 @@ class ModalMap extends React.Component {
         }}
         actions={actions}
       >
-        <DragDropList
-          handleChangeRoute={this.handleChangeRoute}
-          items={this.state.routes}
-        />
+        <div>
+          <DragDropMulti
+            {...this.state}
+            handleSetState={this.handleSetState}
+          />
+        </div>
       </Dialog>
     )
   }
 }
 
 
-export default ModalMap;
+export default DragDropModal;
